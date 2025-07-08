@@ -2,19 +2,19 @@ package github.ankhell.bank_bot.commands.balance
 
 import dev.kord.core.entity.interaction.ChatInputCommandInteraction
 import dev.kord.rest.builder.interaction.ChatInputCreateBuilder
-import dev.kord.rest.builder.interaction.number
 import dev.kord.rest.builder.interaction.string
 import github.ankhell.bank_bot.Permission
 import github.ankhell.bank_bot.commands.Command
-import github.ankhell.bank_bot.jpa.repositories.BalanceRepository
 import github.ankhell.bank_bot.service.AuthorizationService
 import github.ankhell.bank_bot.service.TransactionService
+import github.ankhell.bank_bot.table.BalanceTableRenderer
 import org.springframework.stereotype.Component
 
 @Component
 class BankBalance(
     private val authorizationService: AuthorizationService,
-    private val transactionService: TransactionService
+    private val transactionService: TransactionService,
+    private val balanceRenderer: BalanceTableRenderer
 ) : Command {
 
     override val command: String = "balance"
@@ -36,22 +36,7 @@ class BankBalance(
             if (balances.isEmpty()) {
                 "No balance data found"
             } else {
-                buildString {
-                    appendLine("```")
-                    appendLine(String.format("%-10s | %-20s | %-15s", "Short", "Full Name", "Balance"))
-                    appendLine("-----------|----------------------|-----------------")
-                    balances.forEach {
-                        appendLine(
-                            String.format(
-                                "%-10s | %-20s | %-15s",
-                                it.bank.shortName,
-                                it.bank.fullName,
-                                it.amount
-                            )
-                        )
-                    }
-                    append("```")
-                }
+                balanceRenderer.render(balances)
             }
         }
     }
