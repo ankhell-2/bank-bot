@@ -31,6 +31,8 @@ dependencies {
 	testImplementation("com.h2database:h2:2.3.232")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+	testImplementation("io.mockk:mockk:1.14.4")
+	testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
