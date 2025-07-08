@@ -60,7 +60,7 @@ class TransactionService(
         )
 
         if (senderBank != null) {
-            val senderBalance = balanceRepository.findByBankOrNull(senderBank) ?: Balance(
+            val senderBalance = balanceRepository.findByBank(senderBank) ?: Balance(
                 bank = senderBank,
                 amount = BigInteger.ZERO,
                 guild = guild
@@ -76,7 +76,7 @@ class TransactionService(
         }
 
         if (receiverBank != null) {
-            val senderBalance = balanceRepository.findByBankOrNull(receiverBank) ?: Balance(
+            val senderBalance = balanceRepository.findByBank(receiverBank) ?: Balance(
                 bank = receiverBank,
                 amount = BigInteger.ZERO,
                 guild = guild
@@ -102,7 +102,7 @@ class TransactionService(
             return balanceRepository.findAllByGuild(guild)
         } else {
             val bank = bankRepository.findByGuildAndShortName(guild, bankAbbreviation)
-            return bank?.let { balanceRepository.findByBankOrNull(it) }?.let { setOf(it) } ?: emptySet()
+            return bank?.let { balanceRepository.findByBank(it) }?.let { setOf(it) } ?: emptySet()
         }
     }
 
