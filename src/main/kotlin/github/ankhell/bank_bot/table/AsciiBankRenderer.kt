@@ -11,6 +11,6 @@ class AsciiBankRenderer : AsciiTableRenderer(), BanksTableRenderer {
         val rows = banks.map {
             listOf(it.shortName, it.fullName, it.uuid.toString())
         }
-        return render(headers, rows)
+        return render(headers, rows, true)
     }
 }

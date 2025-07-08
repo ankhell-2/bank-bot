@@ -1,7 +1,7 @@
 package github.ankhell.bank_bot.table
 
 abstract class AsciiTableRenderer : TableRenderer {
-    override fun render(headers: List<String>, rows: List<List<String>>): String {
+    override fun render(headers: List<String>, rows: List<List<String>>, monospaced: Boolean): String {
         if (headers.isEmpty()) return ""
 
         val allRows = listOf(headers) + rows
@@ -16,11 +16,11 @@ abstract class AsciiTableRenderer : TableRenderer {
         val separator = colWidths.joinToString("-|-") { "-".repeat(it) }
 
         return buildString {
-            appendLine("```")
+            if (monospaced) appendLine("```")
             appendLine(formatRow(headers))
             appendLine(separator)
             rows.forEach { appendLine(formatRow(it)) }
-            append("```")
+            if (monospaced) append("```")
         }
     }
 }

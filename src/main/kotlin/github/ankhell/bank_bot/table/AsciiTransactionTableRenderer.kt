@@ -30,6 +30,6 @@ class AsciiTransactionTableRenderer : AsciiTableRenderer(), TransactionTableRend
             listOf(who, action, amount, comment, timestamp)
         }
 
-        return render(headers, rows)
+        return render(headers, rows, false)
     }
 }

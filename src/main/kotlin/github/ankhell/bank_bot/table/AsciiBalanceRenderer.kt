@@ -11,6 +11,6 @@ class AsciiBalanceRenderer : AsciiTableRenderer(), BalanceTableRenderer {
         val rows = balances.map {
             listOf(it.bank.shortName, it.bank.fullName, it.amount.toString())
         }
-        return render(headers, rows)
+        return render(headers, rows, true)
     }
 }
