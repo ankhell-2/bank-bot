@@ -11,16 +11,16 @@ import github.ankhell.bank_bot.jpa.entities.Member
 import github.ankhell.bank_bot.jpa.repositories.BalanceRepository
 import github.ankhell.bank_bot.jpa.repositories.BankRepository
 import github.ankhell.bank_bot.service.AuthorizationService
+import github.ankhell.bank_bot.service.BanksService
 import github.ankhell.bank_bot.service.GuildAndMemberRegistrarService
 import kotlinx.coroutines.yield
 import org.springframework.stereotype.Component
 
 @Component
 class RemoveBank(
-    private val bankRepository: BankRepository,
-    private val balanceRepository: BalanceRepository,
     private val authorizationService: AuthorizationService,
-    private val guildAndMemberRegistrarService: GuildAndMemberRegistrarService
+    private val guildAndMemberRegistrarService: GuildAndMemberRegistrarService,
+    private val banksService: BanksService
 ) : Command {
 
     override val command: String = "bankremove"
@@ -36,17 +36,7 @@ class RemoveBank(
         val guild = guildAndMemberRegistrarService.getGuild(guildId)
         return authorizationService.ifAllowed(interaction.user, guildId, Permission.BANK_MANAGE) {
             val abbr = interaction.command.strings["abbreviation"]!!
-            val bank = bankRepository.findByGuildAndShortName(guild, abbr)
-            return@ifAllowed if (bank != null) {
-                val balance = balanceRepository.findByBank(bank)
-                if (balance!=null){
-                    balanceRepository.save(balance.copy(isDeleted = true))
-                }
-                bankRepository.save(bank.copy(isDeleted = true))
-                "Bank ($abbr) removed successfully"
-            } else {
-                "Bank ($abbr) doesn't exist"
-            }
+            banksService.removeBank(abbr, guild)
         }
     }
 

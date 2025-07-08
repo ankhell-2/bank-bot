@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
 
 interface BankRepository : JpaRepository<Bank, UUID> {
-    fun findAllByGuild(guild: Guild): List<Bank>
+    fun findAllByGuild(guild: Guild): Set<Bank>
 
     fun findByGuildAndShortName(guild: Guild, shortName: String): Bank?
 }

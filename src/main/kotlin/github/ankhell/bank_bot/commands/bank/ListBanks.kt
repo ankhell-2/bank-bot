@@ -8,16 +8,17 @@ import github.ankhell.bank_bot.commands.Command
 import github.ankhell.bank_bot.jpa.entities.Member
 import github.ankhell.bank_bot.jpa.repositories.BankRepository
 import github.ankhell.bank_bot.service.AuthorizationService
+import github.ankhell.bank_bot.service.BanksService
 import github.ankhell.bank_bot.service.GuildAndMemberRegistrarService
 import github.ankhell.bank_bot.table.BanksTableRenderer
 import org.springframework.stereotype.Component
 
 @Component
 class ListBanks(
-    private val bankRepository: BankRepository,
     private val authorizationService: AuthorizationService,
     private val guildAndMemberRegistrarService: GuildAndMemberRegistrarService,
-    private val banksTableRenderer: BanksTableRenderer
+    private val banksTableRenderer: BanksTableRenderer,
+    private val banksService: BanksService
 ) : Command {
 
     override val command: String = "listbanks"
@@ -32,7 +33,7 @@ class ListBanks(
         return authorizationService.ifAllowed(interaction.user, guildId, Permission.BANK_VIEW) {
             buildString {
                 append("Here is a list of available banks:\n")
-                append(banksTableRenderer.render(bankRepository.findAllByGuild(guild).toSet()))
+                append(banksTableRenderer.render(banksService.listAllByGuild(guild)))
             }
         }
     }

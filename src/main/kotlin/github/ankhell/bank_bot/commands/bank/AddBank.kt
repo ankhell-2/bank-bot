@@ -10,20 +10,21 @@ import github.ankhell.bank_bot.jpa.entities.Bank
 import github.ankhell.bank_bot.jpa.entities.Member
 import github.ankhell.bank_bot.jpa.repositories.BankRepository
 import github.ankhell.bank_bot.service.AuthorizationService
+import github.ankhell.bank_bot.service.BanksService
 import github.ankhell.bank_bot.service.GuildAndMemberRegistrarService
 import kotlinx.coroutines.yield
 import org.springframework.stereotype.Component
 
 @Component
 class AddBank(
-    private val bankRepository: BankRepository,
     private val authorizationService: AuthorizationService,
-    private val guildAndMemberRegistrarService: GuildAndMemberRegistrarService
+    private val guildAndMemberRegistrarService: GuildAndMemberRegistrarService,
+    private val banksService: BanksService
 ) : Command {
 
     override val command: String = "bankadd"
     override val description: String = "Add a bank"
-    override val paramBuilder: ChatInputCreateBuilder.() -> Unit= {
+    override val paramBuilder: ChatInputCreateBuilder.() -> Unit = {
         string("abbreviation", "Abbreviation of a bank name") {
             required = true
         }
@@ -38,12 +39,7 @@ class AddBank(
         return authorizationService.ifAllowed(interaction.user, guildId, Permission.BANK_MANAGE) {
             val abbr = interaction.command.strings["abbreviation"]!!
             val fullName = interaction.command.strings["fullname"]!!
-            if (bankRepository.findByGuildAndShortName(guild,abbr)!=null){
-                return@ifAllowed "Bank with short name ($abbr) already exist in that guild!"
-            }
-            val bank = Bank(shortName = abbr, fullName = fullName, guild =  guild)
-            bankRepository.save(bank)
-            "Bank ($abbr) - $fullName successfully added"
+            banksService.addBank(abbr, fullName, guild)
         }
     }
 

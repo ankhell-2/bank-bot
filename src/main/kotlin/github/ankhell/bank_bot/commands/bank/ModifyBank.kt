@@ -10,6 +10,7 @@ import github.ankhell.bank_bot.jpa.entities.Bank
 import github.ankhell.bank_bot.jpa.entities.Member
 import github.ankhell.bank_bot.jpa.repositories.BankRepository
 import github.ankhell.bank_bot.service.AuthorizationService
+import github.ankhell.bank_bot.service.BanksService
 import github.ankhell.bank_bot.service.GuildAndMemberRegistrarService
 import kotlinx.coroutines.yield
 import org.springframework.data.repository.findByIdOrNull
@@ -18,8 +19,8 @@ import java.util.UUID
 
 @Component
 class ModifyBank(
-    private val bankRepository: BankRepository,
     private val authorizationService: AuthorizationService,
+    private val banksService: BanksService
 ) : Command {
 
     override val command: String = "bankmodify"
@@ -42,16 +43,7 @@ class ModifyBank(
             val abbr = interaction.command.strings["abbreviation"]
             val fullName = interaction.command.strings["fullname"]
             val uuid = UUID.fromString(interaction.command.strings["uuid"]!!)
-            val bankEntity = bankRepository.findByIdOrNull(uuid)
-            if (bankEntity == null) {
-                return@ifAllowed "Bank with uuid $uuid doesn't exist"
-            }
-            val newBank = bankEntity.copy(
-                shortName = abbr ?: bankEntity.shortName,
-                fullName = fullName ?: bankEntity.fullName
-            )
-            bankRepository.save(newBank)
-            "Bank ${newBank.fullName} modified successfully"
+            banksService.modifyBank(uuid, abbr, fullName)
         }
     }
 
