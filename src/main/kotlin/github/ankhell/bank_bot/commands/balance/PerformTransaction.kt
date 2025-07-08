@@ -21,17 +21,17 @@ class PerformTransaction(
     override val description: String = "Perform a transaction - if sender is null it's topup, if receiver - withdrawal"
 
     override val paramBuilder: ChatInputCreateBuilder.() -> Unit = {
-        string("sender", "Sender bank short name") {
-            required = false
-        }
-        string("receiver", "Receiver bank short name") {
-            required = false
-        }
         number("ammount", "Ammount to add to bank balance") {
             required = true
         }
         string("comment", "Comment about that transaction") {
             required = true
+        }
+        string("sender", "Sender bank short name") {
+            required = false
+        }
+        string("receiver", "Receiver bank short name") {
+            required = false
         }
     }
 
