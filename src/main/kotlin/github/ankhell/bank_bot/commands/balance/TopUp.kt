@@ -39,7 +39,7 @@ class TopUp(
         return authorizationService.ifAllowed(interaction.user, guildId, Permission.TRANSACTION_CREATE) {
             transactionService.performTransaction(
                 user = interaction.user,
-                sender = interaction.command.strings["bank"],
+                receiver = interaction.command.strings["bank"],
                 guildId = guildId,
                 amount = amount,
                 comment = interaction.command.strings["comment"]!!

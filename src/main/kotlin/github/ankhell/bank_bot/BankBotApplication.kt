@@ -1,6 +1,8 @@
 package github.ankhell.bank_bot
 
+import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.runApplication
 import org.springframework.cache.CacheManager
@@ -20,5 +22,10 @@ class BankBotApplication{
 }
 
 fun main(args: Array<String>) {
-	runApplication<BankBotApplication>(*args)
+    SpringApplicationBuilder(BankBotApplication::class.java)
+        .web(WebApplicationType.NONE)
+        .run(*args)
+
+    // Keep the app alive manually
+    Thread.currentThread().join()
 }
