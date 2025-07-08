@@ -6,6 +6,7 @@ import github.ankhell.bank_bot.jpa.entities.*
 import github.ankhell.bank_bot.jpa.repositories.BalanceRepository
 import github.ankhell.bank_bot.jpa.repositories.BankRepository
 import github.ankhell.bank_bot.jpa.repositories.TransactionRepository
+import github.ankhell.bank_bot.table.AsciiTransactionTableRenderer
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.interceptor.TransactionAspectSupport
@@ -19,6 +20,7 @@ class TransactionService(
     private val bankRepository: BankRepository,
     private val transactionRepository: TransactionRepository,
     private val guildAndMemberRegistrarService: GuildAndMemberRegistrarService,
+    private val transactionTableRenderer: AsciiTransactionTableRenderer
 ) {
 
     @Transactional
@@ -95,12 +97,12 @@ class TransactionService(
     }
 
     @Transactional
-    suspend fun getTransactions(
+    suspend fun getTransactionsRendered(
         limit: Long = 10,
         guild: Guild,
         member: Member? = null,
         bank: Bank? = null,
-    ): List<Transaction> = transactionRepository.findFiltered(limit, member, bank, guild)
+    ): String = transactionTableRenderer.render(transactionRepository.findFiltered(limit, member, bank, guild))
 
     @Transactional
     suspend fun getBalances(guildId: Snowflake, bankAbbreviation: String? = null): Set<Balance> {

@@ -11,7 +11,6 @@ import github.ankhell.bank_bot.service.AuthorizationService
 import github.ankhell.bank_bot.service.BanksService
 import github.ankhell.bank_bot.service.GuildAndMemberRegistrarService
 import github.ankhell.bank_bot.service.TransactionService
-import github.ankhell.bank_bot.table.TransactionTableRenderer
 import org.springframework.stereotype.Component
 
 @Component
@@ -20,7 +19,6 @@ class Audit(
     private val transactionService: TransactionService,
     private val guildAndMemberRegistrarService: GuildAndMemberRegistrarService,
     private val banksService: BanksService,
-    private val transactionTableRenderer: TransactionTableRenderer
 ) : Command {
 
     override val command: String = "audit"
@@ -46,12 +44,12 @@ class Audit(
         val member = interaction.command.users["user"]?.let { guildAndMemberRegistrarService.getUser(it) }
         val bank = interaction.command.strings["bank"]?.let { banksService.getBank(it,guild) }
         return authorizationService.ifAllowed(interaction.user, guildId, Permission.TRANSACTION_VIEW) {
-            transactionTableRenderer.render(transactionService.getTransactions(
+            transactionService.getTransactionsRendered(
                 limit = limit,
                 guild = guild,
                 member = member,
                 bank = bank
-            ))
+            )
         }
     }
 }
