@@ -1,6 +1,15 @@
+FROM gradle:8.7.0-jdk21 AS builder
+WORKDIR /app
+
+COPY . .
+
+RUN ./gradlew bootJar --no-daemon
+
 FROM azul/zulu-openjdk:21-latest
-RUN addgroup -S spring && adduser -S spring -G spring
+
+RUN addgroup --system spring && adduser --system spring --ingroup spring
 USER spring:spring
-ARG JAR_FILE=/build/libs/bank-bot-0.0.1-SNAPSHOT.jar
-COPY ${JAR_FILE} app.jar
-ENTRYPOINT ["java","-jar","/app.jar"]
+
+COPY --from=builder /app/build/libs/*.jar app.jar
+
+ENTRYPOINT ["java", "-jar", "/app.jar"]
