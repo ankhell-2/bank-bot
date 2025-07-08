@@ -22,7 +22,7 @@ class BankBalance(
     override val description: String = "Shows bank(s) balance(s)"
 
     override val paramBuilder: ChatInputCreateBuilder.() -> Unit = {
-        string("bankabbr", "Bank short name, if not specified - shows all") {
+        string("bank", "Bank short name, if not specified - shows all") {
             required = false
         }
     }
@@ -30,11 +30,29 @@ class BankBalance(
     override suspend fun process(interaction: ChatInputCommandInteraction): String {
         val guildId = interaction.invokedCommandGuildId!!
         return authorizationService.ifAllowed(interaction.user, guildId, Permission.BALANCE_MODIFY) {
-            val bankShort: String? = interaction.command.strings["bankabbr"]
-            transactionService.getBalances(guildId, bankShort)
-                .takeIf { it.isNotEmpty() }
-                ?.joinToString("\n") { "Bank ${it.bank.fullName} balance is ${it.amount}" }
-                ?: "No balance data found"
+            val bankShort: String? = interaction.command.strings["bank"]
+            val balances = transactionService.getBalances(guildId, bankShort)
+
+            if (balances.isEmpty()) {
+                "No balance data found"
+            } else {
+                buildString {
+                    appendLine("```")
+                    appendLine(String.format("%-10s | %-20s | %-15s", "Short", "Full Name", "Balance"))
+                    appendLine("-----------|----------------------|-----------------")
+                    balances.forEach {
+                        appendLine(
+                            String.format(
+                                "%-10s | %-20s | %-15s",
+                                it.bank.shortName,
+                                it.bank.fullName,
+                                it.amount
+                            )
+                        )
+                    }
+                    append("```")
+                }
+            }
         }
     }
 }

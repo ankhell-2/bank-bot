@@ -1,9 +1,6 @@
 package github.ankhell.bank_bot.jpa.entities
 
-import jakarta.persistence.AttributeOverride
-import jakarta.persistence.AttributeOverrides
 import jakarta.persistence.Column
-import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
@@ -13,37 +10,37 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import kotlinx.datetime.Clock
 import kotlinx.datetime.toJavaInstant
-import java.math.BigDecimal
-import java.math.BigInteger
+import java.time.Instant
 import java.util.UUID
 
 @Entity
 @Table(name = "transactions")
 data class Transaction(
+
     @Id
     @GeneratedValue
     val id: UUID? = null,
 
-    @Embedded
-    @AttributeOverrides(
-        AttributeOverride(name = "type", column = Column(name = "sender_type")),
-        AttributeOverride(name = "bankId", column = Column(name = "sender_bank_id")),
-        AttributeOverride(name = "userId", column = Column(name = "sender_user_id"))
-    )
-    val sender: TransactionParty,
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_bank_id")
+    val sender: Bank? = null,
 
-    @Embedded
-    @AttributeOverrides(
-        AttributeOverride(name = "type", column = Column(name = "receiver_type")),
-        AttributeOverride(name = "bankId", column = Column(name = "receiver_bank_id")),
-        AttributeOverride(name = "userId", column = Column(name = "receiver_user_id"))
-    )
-    val receiver: TransactionParty,
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_bank_id")
+    val receiver: Bank? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "performed_by")
+    val performedBy: Member,
 
     @Column(nullable = false)
     val amount: Long,
 
-    val timestamp: java.time.Instant = Clock.System.now().toJavaInstant(),
+    @Column(nullable = false)
+    val comment: String,
+
+    @Column(nullable = false)
+    val timestamp: Instant = Clock.System.now().toJavaInstant(),
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "guild_id")

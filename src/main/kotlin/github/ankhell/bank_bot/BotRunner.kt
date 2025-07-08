@@ -8,6 +8,7 @@ import dev.kord.core.on
 import dev.kord.gateway.Intent
 import dev.kord.gateway.PrivilegedIntent
 import github.ankhell.bank_bot.commands.Command
+import github.ankhell.bank_bot.properties.DiscordProperties
 import github.ankhell.bank_bot.service.GuildAndMemberRegistrarService
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy

@@ -11,20 +11,26 @@ import github.ankhell.bank_bot.service.TransactionService
 import org.springframework.stereotype.Component
 
 @Component
-class TopUpBalance(
+class PerformTransaction(
     private val authorizationService: AuthorizationService,
     private val transactionService: TransactionService
 ) : Command {
 
-    override val command: String = "topup"
+    override val command: String = "transaction"
 
-    override val description: String = "Add money to the bank"
+    override val description: String = "Perform a transaction - if sender is null it's topup, if receiver - withdrawal"
 
     override val paramBuilder: ChatInputCreateBuilder.() -> Unit = {
-        string("bankabbr", "Bank short name") {
-            required = true
+        string("sender", "Sender bank short name") {
+            required = false
+        }
+        string("receiver", "Receiver bank short name") {
+            required = false
         }
         number("ammount", "Ammount to add to bank balance") {
+            required = true
+        }
+        string("comment", "Comment about that transaction") {
             required = true
         }
     }
@@ -32,11 +38,14 @@ class TopUpBalance(
     override suspend fun process(interaction: ChatInputCommandInteraction): String {
         val guildId = interaction.invokedCommandGuildId!!
         return authorizationService.ifAllowed(interaction.user, guildId, Permission.BALANCE_MODIFY) {
-            transactionService.topUpBank(
+            transactionService.performTransaction(
                 user = interaction.user,
-                bankAbbreviation = interaction.command.strings["bankabbr"]!!,
+                sender = interaction.command.strings["sender"],
+                receiver = interaction.command.strings["receiver"],
                 guildId = guildId,
-                amount = interaction.command.numbers["ammount"]!!.toLong()
+                amount = interaction.command.numbers["ammount"]!!.toLong(),
+                comment = interaction.command.strings["comment"]!!
+
             )
         }
     }
