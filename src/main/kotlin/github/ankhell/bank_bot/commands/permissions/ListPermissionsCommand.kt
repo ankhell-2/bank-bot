@@ -35,7 +35,7 @@ class ListPermissionsCommand(
             val roleID = interaction.command.roles["role"]!!.id.value.toBigInteger()
             val permEntity = permissionRepository.findByIdOrNull(roleID)
             if (permEntity!=null ){
-                "Permissions for role <@&$roleID> are: ${permEntity.permissions}"
+                "Permissions for role <@&$roleID> are: ${permEntity.permissions.joinToString { it.description }}"
             } else {
                 "No permissions found for  role <@&$roleID>"
             }

@@ -9,6 +9,8 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
+import org.hibernate.annotations.SQLRestriction
+import org.hibernate.annotations.Where
 import java.util.UUID
 
 @Entity
@@ -18,6 +20,7 @@ import java.util.UUID
         UniqueConstraint(columnNames = ["guild_id", "short_name"])
     ]
 )
+@SQLRestriction("is_deleted = false")
 data class Bank(
 
     @Id
@@ -32,5 +35,8 @@ data class Bank(
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "guild_id")
-    val guild: Guild
+    val guild: Guild,
+
+    @Column(name = "is_deleted", nullable = false)
+    val isDeleted: Boolean = false
 )

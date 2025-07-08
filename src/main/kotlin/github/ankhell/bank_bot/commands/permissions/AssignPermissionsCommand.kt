@@ -47,7 +47,7 @@ class AssignPermissionsCommand(
             )
             permissionRepository.save(rolePermission)
 
-            "Permissions $permission successfully added to role <@&$roleID>"
+            "Permission to ${permission.description.lowercase()} successfully added to role <@&$roleID>"
         }
 
 }

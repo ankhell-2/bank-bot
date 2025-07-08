@@ -36,6 +36,8 @@ class ListBanks(
                     append(")")
                     append(" - ")
                     append(it.fullName)
+                    append(" | ")
+                    append(it.uuid)
                     append("\n")
                 }
             }

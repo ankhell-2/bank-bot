@@ -9,11 +9,13 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.MapsId
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
+import org.hibernate.annotations.SQLRestriction
 import java.math.BigInteger
 import java.util.UUID
 
 @Entity
 @Table(name = "balances")
+@SQLRestriction("is_deleted = false")
 data class Balance(
 
     @Id
@@ -29,5 +31,8 @@ data class Balance(
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "guild_id")
-    val guild: Guild
+    val guild: Guild,
+
+    @Column(name = "is_deleted", nullable = false)
+    val isDeleted: Boolean = false
 )
