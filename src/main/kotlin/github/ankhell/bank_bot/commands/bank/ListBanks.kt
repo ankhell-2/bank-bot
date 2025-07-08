@@ -9,13 +9,15 @@ import github.ankhell.bank_bot.jpa.entities.Member
 import github.ankhell.bank_bot.jpa.repositories.BankRepository
 import github.ankhell.bank_bot.service.AuthorizationService
 import github.ankhell.bank_bot.service.GuildAndMemberRegistrarService
+import github.ankhell.bank_bot.table.BanksTableRenderer
 import org.springframework.stereotype.Component
 
 @Component
 class ListBanks(
     private val bankRepository: BankRepository,
     private val authorizationService: AuthorizationService,
-    private val guildAndMemberRegistrarService: GuildAndMemberRegistrarService
+    private val guildAndMemberRegistrarService: GuildAndMemberRegistrarService,
+    private val banksTableRenderer: BanksTableRenderer
 ) : Command {
 
     override val command: String = "listbanks"
@@ -30,16 +32,7 @@ class ListBanks(
         return authorizationService.ifAllowed(interaction.user, guildId, Permission.BANK_VIEW) {
             buildString {
                 append("Here is a list of available banks:\n")
-                bankRepository.findAllByGuild(guild).forEach {
-                    append("(")
-                    append(it.shortName)
-                    append(")")
-                    append(" - ")
-                    append(it.fullName)
-                    append(" | ")
-                    append(it.uuid)
-                    append("\n")
-                }
+                append(banksTableRenderer.render(bankRepository.findAllByGuild(guild).toSet()))
             }
         }
     }
