@@ -44,6 +44,11 @@ class BanksService(
     }
 
     @Transactional
+    suspend fun getBank(shortName: String, guild: Guild): Bank? =
+        bankRepository.findByGuildAndShortName(guild, shortName)
+
+
+    @Transactional
     suspend fun removeBank(shortName: String, guild: Guild): String {
         val bank = bankRepository.findByGuildAndShortName(guild, shortName)
         return if (bank != null) {

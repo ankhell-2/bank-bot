@@ -1,9 +1,6 @@
 package github.ankhell.bank_bot.table
 
-import org.springframework.stereotype.Component
-
-@Component
-class AsciiTableRenderer :TableRenderer {
+abstract class AsciiTableRenderer : TableRenderer {
     override fun render(headers: List<String>, rows: List<List<String>>): String {
         if (headers.isEmpty()) return ""
 

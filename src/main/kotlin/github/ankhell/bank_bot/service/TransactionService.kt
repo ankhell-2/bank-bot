@@ -2,8 +2,7 @@ package github.ankhell.bank_bot.service
 
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.User
-import github.ankhell.bank_bot.jpa.entities.Balance
-import github.ankhell.bank_bot.jpa.entities.Transaction
+import github.ankhell.bank_bot.jpa.entities.*
 import github.ankhell.bank_bot.jpa.repositories.BalanceRepository
 import github.ankhell.bank_bot.jpa.repositories.BankRepository
 import github.ankhell.bank_bot.jpa.repositories.TransactionRepository
@@ -94,6 +93,14 @@ class TransactionService(
             else -> "Unknown state"
         }
     }
+
+    @Transactional
+    suspend fun getTransactions(
+        limit: Long = 10,
+        guild: Guild,
+        member: Member? = null,
+        bank: Bank? = null,
+    ): List<Transaction> = transactionRepository.findFiltered(limit, member, bank, guild)
 
     @Transactional
     suspend fun getBalances(guildId: Snowflake, bankAbbreviation: String? = null): Set<Balance> {
