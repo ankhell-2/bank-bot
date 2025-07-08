@@ -3,22 +3,15 @@ spring:
     name: bank-bot
   jpa:
     hibernate:
-      ddl-auto: create-drop  # or `update` if you want to persist schema between test methods
+      ddl-auto: update  # or `none` if schema managed externally
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
-    show-sql: true
-    generate-ddl: true
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-  test:
-    database:
-      replace: none  # prevent Spring Boot from replacing your DataSource with an embedded one
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    generate-ddl: false
 
 logging:
   level:
-    root: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    root: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
