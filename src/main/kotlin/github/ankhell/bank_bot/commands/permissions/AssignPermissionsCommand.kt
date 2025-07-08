@@ -31,7 +31,7 @@ class AssignPermissionsCommand(
         }
         string("permission", "Permission to assign") {
             required = true
-            Permission.entries.forEach { choice(it.name, it.name) }
+            Permission.entries.forEach { choice(it.description, it.name) }
         }
     }
 

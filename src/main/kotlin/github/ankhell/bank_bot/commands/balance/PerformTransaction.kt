@@ -37,7 +37,7 @@ class PerformTransaction(
 
     override suspend fun process(interaction: ChatInputCommandInteraction): String {
         val guildId = interaction.invokedCommandGuildId!!
-        return authorizationService.ifAllowed(interaction.user, guildId, Permission.BALANCE_MODIFY) {
+        return authorizationService.ifAllowed(interaction.user, guildId, Permission.TRANSACTION_CREATE) {
             transactionService.performTransaction(
                 user = interaction.user,
                 sender = interaction.command.strings["sender"],

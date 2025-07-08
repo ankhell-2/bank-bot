@@ -29,7 +29,7 @@ class BankBalance(
 
     override suspend fun process(interaction: ChatInputCommandInteraction): String {
         val guildId = interaction.invokedCommandGuildId!!
-        return authorizationService.ifAllowed(interaction.user, guildId, Permission.BALANCE_MODIFY) {
+        return authorizationService.ifAllowed(interaction.user, guildId, Permission.BALANCE_VIEW) {
             val bankShort: String? = interaction.command.strings["bank"]
             val balances = transactionService.getBalances(guildId, bankShort)
 
