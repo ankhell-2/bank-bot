@@ -1,16 +1,20 @@
 spring:
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
   main:
     web-application-type: none
   application:
     name: bank-bot
   jpa:
     hibernate:
-      ddl-auto: update  # or `none` if schema managed externally
+      ddl-auto: none  # or `none` if schema managed externally
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
-    generate-ddl: true
+    generate-ddl: false
 
 server:
   port: ${PORT:8080}

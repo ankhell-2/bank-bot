@@ -1,0 +1,284 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 001-balance
+      author: ankhell
+      changes:
+        - createTable:
+            tableName: balances
+            columns:
+              - column:
+                  name: bank_id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: amount
+                  type: NUMERIC
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_deleted
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: guild_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 002-bank
+      author: ankhell
+      changes:
+        - createTable:
+            tableName: banks
+            columns:
+              - column:
+                  name: uuid
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: short_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: full_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_deleted
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: guild_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            columnNames: guild_id, short_name
+            tableName: banks
+            constraintName: uq_banks_guild_shortname
+
+  - changeSet:
+      id: 003-member
+      author: ankhell
+      changes:
+        - createTable:
+            tableName: members
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: username
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: member_guild_ids
+            columns:
+              - column:
+                  name: member_id
+                  type: BIGINT
+              - column:
+                  name: guild_id
+                  type: BIGINT
+        - createTable:
+            tableName: member_role_ids
+            columns:
+              - column:
+                  name: member_id
+                  type: BIGINT
+              - column:
+                  name: role_id
+                  type: BIGINT
+
+  - changeSet:
+      id: 004-rolepermission
+      author: ankhell
+      changes:
+        - createTable:
+            tableName: role_permission
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: guild_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: role_permission_permissions
+            columns:
+              - column:
+                  name: role_permission_id
+                  type: BIGINT
+              - column:
+                  name: permissions
+                  type: VARCHAR(255)
+
+  - changeSet:
+      id: 005-spiceminer
+      author: ankhell
+      changes:
+        - createTable:
+            tableName: spice_miners
+            columns:
+              - column:
+                  name: uuid
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: debt
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: guild_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            columnNames: guild_id, name
+            tableName: spice_miners
+            constraintName: uq_spiceminer_guild_name
+
+  - changeSet:
+      id: 006-spicerunconfig
+      author: ankhell
+      changes:
+        - createTable:
+            tableName: spice_run_config
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: backing_bank_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: main_bank_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: guild_share
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: has_craft_bonus
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: guild_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 007-spicerun
+      author: ankhell
+      changes:
+        - createTable:
+            tableName: spice_run
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: spice_gathered
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: spice_run_config_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: guild_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: spice_run_participants
+            columns:
+              - column:
+                  name: spice_run_id
+                  type: BIGINT
+              - column:
+                  name: spice_miner_uuid
+                  type: UUID
+
+  - changeSet:
+      id: 008-transaction
+      author: ankhell
+      changes:
+        - createTable:
+            tableName: transactions
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: sender_bank_id
+                  type: UUID
+              - column:
+                  name: receiver_bank_id
+                  type: UUID
+              - column:
+                  name: performed_by
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: comment
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: timestamp
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: guild_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
