@@ -1,8 +1,7 @@
 package github.ankhell.bank_bot.services
 
-import github.ankhell.bank_bot.converters.toBigInteger
+import dev.kord.common.entity.Snowflake
 import github.ankhell.bank_bot.jpa.entities.Bank
-import github.ankhell.bank_bot.jpa.entities.Guild
 import github.ankhell.bank_bot.jpa.repositories.BalanceRepository
 import github.ankhell.bank_bot.jpa.repositories.BankRepository
 import github.ankhell.bank_bot.service.BanksService
@@ -23,8 +22,8 @@ class BanksServiceTest {
     private lateinit var balanceRepository: BalanceRepository
     private lateinit var banksService: BanksService
 
-    private val guild = Guild(id = Random.nextULong().toBigInteger())
-    private val bank = Bank(uuid = UUID.randomUUID(), shortName = "TB", fullName = "Test Bank", guild = guild)
+    private val guild = Snowflake(Random.nextULong())
+    private val bank = Bank(uuid = UUID.randomUUID(), shortName = "TB", fullName = "Test Bank", guildId = guild)
 
     @BeforeEach
     fun setUp() {
@@ -35,7 +34,7 @@ class BanksServiceTest {
 
     @Test
     fun `should add bank successfully`() = runTest {
-        every { bankRepository.findByGuildAndShortName(guild, "TB") } returns null
+        every { bankRepository.findByGuildIdAndShortName(guild, "TB") } returns null
         every { bankRepository.save(any()) } returns bank
 
         val result = banksService.addBank("TB", "Test Bank", guild)
@@ -46,7 +45,7 @@ class BanksServiceTest {
 
     @Test
     fun `should not add bank if it exists`() = runTest {
-        every { bankRepository.findByGuildAndShortName(guild, "TB") } returns bank
+        every { bankRepository.findByGuildIdAndShortName(guild, "TB") } returns bank
 
         val result = banksService.addBank("TB", "Test Bank", guild)
 
@@ -56,7 +55,7 @@ class BanksServiceTest {
 
     @Test
     fun `should list all banks by guild`() = runTest {
-        every { bankRepository.findAllByGuild(guild) } returns setOf(bank)
+        every { bankRepository.findAllByGuildId(guild) } returns setOf(bank)
 
         val result = banksService.listAllByGuild(guild)
 
@@ -66,7 +65,13 @@ class BanksServiceTest {
 
     @Test
     fun `should modify bank if exists`() = runTest {
-        val modifiedBank = bank.copy(fullName = "New Name")
+        val modifiedBank = Bank(
+            uuid = bank.uuid,
+            shortName = bank.shortName,
+            fullName = "New Name",
+            isDeleted = false,
+            guildId = guild
+        )
         every { bankRepository.findByIdOrNull(bank.uuid!!) } returns bank
         every { bankRepository.save(any()) } returns modifiedBank
 
@@ -88,7 +93,7 @@ class BanksServiceTest {
 
     @Test
     fun `should remove bank and mark balance as deleted if exists`() = runTest {
-        every { bankRepository.findByGuildAndShortName(guild, "TB") } returns bank
+        every { bankRepository.findByGuildIdAndShortName(guild, "TB") } returns bank
         every { balanceRepository.findByBank(bank) } returns mockk(relaxed = true)
         every { balanceRepository.save(any()) } returns mockk()
         every { bankRepository.save(any()) } returns mockk()
@@ -100,7 +105,7 @@ class BanksServiceTest {
 
     @Test
     fun `should return not exist message if bank not found`() = runTest {
-        every { bankRepository.findByGuildAndShortName(guild, "XXX") } returns null
+        every { bankRepository.findByGuildIdAndShortName(guild, "XXX") } returns null
 
         val result = banksService.removeBank("XXX", guild)
 

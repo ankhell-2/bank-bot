@@ -3,7 +3,6 @@ package github.ankhell.bank_bot.service
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.User
 import github.ankhell.bank_bot.Permission
-import github.ankhell.bank_bot.converters.toBigInteger
 import github.ankhell.bank_bot.jpa.repositories.RolePermissionRepository
 import github.ankhell.bank_bot.properties.AuthServiceProperties
 import org.slf4j.LoggerFactory
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Service
 @Service
 class AuthorizationService(
     private val repo: RolePermissionRepository,
-    private val guildAndMemberRegistrarService: GuildAndMemberRegistrarService,
     private val authServiceProperties: AuthServiceProperties
 ) {
 
@@ -23,9 +21,8 @@ class AuthorizationService(
         guildId: Snowflake,
         permission: Permission
     ): Boolean {
-        val roleIds = user.asMember(guildId).roleIds.map { it.value.toBigInteger() }
-        val guild = guildAndMemberRegistrarService.getGuild(guildId)
-        val rolePerms = repo.findAllByGuildAndRoleIDIn(guild, roleIds)
+        val roleIds = user.asMember(guildId).roleIds
+        val rolePerms = repo.findAllByGuildIdAndIdIn(guildId, roleIds)
 
         return rolePerms.any { permission in it.permissions }
     }

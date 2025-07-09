@@ -1,26 +1,27 @@
 package github.ankhell.bank_bot.jpa.entities
 
+import dev.kord.common.entity.Snowflake
 import github.ankhell.bank_bot.Permission
-import jakarta.persistence.ElementCollection
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.FetchType
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import java.math.BigInteger
+import github.ankhell.bank_bot.jpa.types.SnowflakeJavaType
+import jakarta.persistence.*
+import org.hibernate.annotations.JavaType
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 
 @Entity
-data class RolePermission(
+class RolePermission(
     @Id
-    val roleID: BigInteger,
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "guild_id")
-    val guild: Guild,
+    @JdbcTypeCode(SqlTypes.BIGINT)
+    @JavaType(value = SnowflakeJavaType::class)
+    var id: Snowflake = Snowflake(0uL),
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
-    val permissions: Set<Permission>
+    var permissions: MutableSet<Permission> = mutableSetOf(),
+
+    @Column(name = "guild_id", nullable = false)
+    @JdbcTypeCode(SqlTypes.BIGINT)
+    @JavaType(value = SnowflakeJavaType::class)
+    var guildId: Snowflake = Snowflake(0uL)
+
 )

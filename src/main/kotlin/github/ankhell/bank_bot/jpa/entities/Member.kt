@@ -1,31 +1,35 @@
 package github.ankhell.bank_bot.jpa.entities
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.JoinTable
-import jakarta.persistence.ManyToMany
-import jakarta.persistence.Table
-import java.math.BigInteger
+import dev.kord.common.entity.Snowflake
+import github.ankhell.bank_bot.jpa.types.SnowflakeJavaType
+import jakarta.persistence.*
+import org.hibernate.annotations.JavaType
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 
 @Entity
 @Table(name = "members")
-data class Member(
+class Member(
 
     @Id
-    val id: BigInteger? = null,
+    @JdbcTypeCode(SqlTypes.BIGINT)
+    @JavaType(value = SnowflakeJavaType::class)
+    var id: Snowflake? = null,
 
     @Column(unique = true, nullable = false)
-    val username: String,
+    var username: String = "",
 
-    @ManyToMany
-    @JoinTable(
-        name = "user_guild",
-        joinColumns = [JoinColumn(name = "user_id")],
-        inverseJoinColumns = [JoinColumn(name = "guild_id")]
-    )
-    val guilds: Set<Guild> = emptySet(),
+    @ElementCollection
+    @CollectionTable(name = "member_guild_ids", joinColumns = [JoinColumn(name = "member_id")])
+    @Column(name = "guild_id")
+    @JdbcTypeCode(SqlTypes.BIGINT)
+    @JavaType(value = SnowflakeJavaType::class)
+    var guildIds: MutableSet<Snowflake> = mutableSetOf(),
 
-    val roleIds: Set<BigInteger>
+    @ElementCollection
+    @CollectionTable(name = "member_role_ids", joinColumns = [JoinColumn(name = "member_id")])
+    @Column(name = "role_id")
+    @JdbcTypeCode(SqlTypes.BIGINT)
+    @JavaType(value = SnowflakeJavaType::class)
+    var roleIds: MutableSet<Snowflake> = mutableSetOf()
 )

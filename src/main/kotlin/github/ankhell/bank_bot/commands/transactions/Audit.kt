@@ -9,7 +9,7 @@ import github.ankhell.bank_bot.Permission
 import github.ankhell.bank_bot.commands.Command
 import github.ankhell.bank_bot.service.AuthorizationService
 import github.ankhell.bank_bot.service.BanksService
-import github.ankhell.bank_bot.service.GuildAndMemberRegistrarService
+import github.ankhell.bank_bot.service.MemberService
 import github.ankhell.bank_bot.service.TransactionService
 import org.springframework.stereotype.Component
 
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component
 class Audit(
     private val authorizationService: AuthorizationService,
     private val transactionService: TransactionService,
-    private val guildAndMemberRegistrarService: GuildAndMemberRegistrarService,
+    private val memberService: MemberService,
     private val banksService: BanksService,
 ) : Command {
 
@@ -39,14 +39,13 @@ class Audit(
 
     override suspend fun process(interaction: ChatInputCommandInteraction): String {
         val guildId = interaction.invokedCommandGuildId!!
-        val guild = guildAndMemberRegistrarService.getGuild(guildId)
         val limit = interaction.command.numbers["limit"]?.toLong() ?: 10
-        val member = interaction.command.users["user"]?.let { guildAndMemberRegistrarService.getUser(it) }
-        val bank = interaction.command.strings["bank"]?.let { banksService.getBank(it,guild) }
+        val member = interaction.command.users["user"]?.let { memberService.getUser(it) }
+        val bank = interaction.command.strings["bank"]?.let { banksService.getBank(it,guildId) }
         return authorizationService.ifAllowed(interaction.user, guildId, Permission.TRANSACTION_VIEW) {
             transactionService.getTransactionsRendered(
                 limit = limit,
-                guild = guild,
+                guildId = guildId,
                 member = member,
                 bank = bank
             )

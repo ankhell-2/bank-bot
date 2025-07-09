@@ -2,18 +2,18 @@ package github.ankhell.bank_bot.services
 
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.User
-import github.ankhell.bank_bot.converters.toBigInteger
 import github.ankhell.bank_bot.jpa.entities.*
 import github.ankhell.bank_bot.jpa.repositories.*
-import github.ankhell.bank_bot.service.GuildAndMemberRegistrarService
+import github.ankhell.bank_bot.service.MemberService
 import github.ankhell.bank_bot.service.TransactionService
+import github.ankhell.bank_bot.table.AsciiTransactionTableRenderer
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.*
 import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.interceptor.TransactionAspectSupport
 import java.math.BigInteger
-import java.util.UUID
+import java.util.*
 import kotlin.test.assertEquals
 
 class TransactionServiceTest {
@@ -21,27 +21,26 @@ class TransactionServiceTest {
     private val balanceRepository = mockk<BalanceRepository>(relaxed = true)
     private val bankRepository = mockk<BankRepository>(relaxed = true)
     private val transactionRepository = mockk<TransactionRepository>(relaxed = true)
-    private val registrar = mockk<GuildAndMemberRegistrarService>(relaxed = true)
+    private val registrar = mockk<MemberService>(relaxed = true)
 
     private val service = TransactionService(
         balanceRepository,
         bankRepository,
         transactionRepository,
         registrar,
+        AsciiTransactionTableRenderer()
     )
 
-    private val guild = Guild(id = 1uL.toBigInteger())
     private val user = mockk<User>()
-    private val member = Member(id = 1.toBigInteger(), username = "testuser", roleIds = emptySet())
+    private val member = Member(id = Snowflake(1uL), username = "testuser")
     private val guildId = Snowflake(1uL)
 
-    private val senderBank = Bank(uuid = UUID.randomUUID(), shortName = "SND", fullName = "SenderBank", guild = guild)
-    private val receiverBank = Bank(uuid = UUID.randomUUID(), shortName = "RCV", fullName = "ReceiverBank", guild = guild)
+    private val senderBank = Bank(uuid = UUID.randomUUID(), shortName = "SND", fullName = "SenderBank", guildId = guildId)
+    private val receiverBank = Bank(uuid = UUID.randomUUID(), shortName = "RCV", fullName = "ReceiverBank", guildId = guildId)
 
     @BeforeEach
     fun setup() {
         clearAllMocks()
-        coEvery { registrar.getGuild(guildId) } returns guild
         coEvery { registrar.getUser(user) } returns member
     }
 
@@ -53,7 +52,7 @@ class TransactionServiceTest {
 
     @Test
     fun `should return error if sender bank is not found`() = runTest {
-        coEvery { bankRepository.findByGuildAndShortName(guild, "SND") } returns null
+        coEvery { bankRepository.findByGuildIdAndShortName(guildId, "SND") } returns null
 
         val result = service.performTransaction(user, "SND", null, guildId, 100, "test")
 
@@ -62,7 +61,7 @@ class TransactionServiceTest {
 
     @Test
     fun `should return error if receiver bank is not found`() = runTest {
-        coEvery { bankRepository.findByGuildAndShortName(guild, "RCV") } returns null
+        coEvery { bankRepository.findByGuildIdAndShortName(guildId, "RCV") } returns null
 
         val result = service.performTransaction(user, null, "RCV", guildId, 100, "test")
 
@@ -71,12 +70,12 @@ class TransactionServiceTest {
 
     @Test
     fun `should rollback if sender has insufficient balance`() = runTest {
-        coEvery { bankRepository.findByGuildAndShortName(guild, "SND") } returns senderBank
+        coEvery { bankRepository.findByGuildIdAndShortName(guildId, "SND") } returns senderBank
         coEvery { transactionRepository.save(any()) } returns mockk()
         coEvery { balanceRepository.findByBank(senderBank) } returns Balance(
             bank = senderBank,
             amount = BigInteger.valueOf(50),
-            guild = guild
+            guildId = guildId
         )
 
         val status = mockk<TransactionStatus>(relaxed = true)
@@ -95,14 +94,14 @@ class TransactionServiceTest {
 
     @Test
     fun `should succeed topping up receiver`() = runTest {
-        coEvery { bankRepository.findByGuildAndShortName(guild, "RCV") } returns receiverBank
+        coEvery { bankRepository.findByGuildIdAndShortName(guildId, "RCV") } returns receiverBank
         coEvery { balanceRepository.findByBank(receiverBank) } returns null
         coEvery { transactionRepository.save(any()) } returns mockk<Transaction>()
 
         val savedBalance = Balance(
             bank = receiverBank,
             amount = BigInteger.valueOf(100),
-            guild = guild,
+            guildId = guildId,
             isDeleted = false
         )
         coEvery { balanceRepository.save(any()) } returns savedBalance // ✅ fixed
@@ -114,19 +113,23 @@ class TransactionServiceTest {
 
     @Test
     fun `should succeed withdrawing from sender`() = runTest {
-        coEvery { bankRepository.findByGuildAndShortName(guild, "SND") } returns senderBank
+        coEvery { bankRepository.findByGuildIdAndShortName(guildId, "SND") } returns senderBank
 
         val existingBalance = Balance(
             bank = senderBank,
             amount = BigInteger.valueOf(200),
-            guild = guild,
+            guildId = guildId,
             isDeleted = false
         )
         coEvery { balanceRepository.findByBank(senderBank) } returns existingBalance
         coEvery { transactionRepository.save(any()) } returns mockk<Transaction>()
-        coEvery { balanceRepository.save(any()) } returns existingBalance.copy(
-            amount = BigInteger.valueOf(100)
-        )
+        coEvery { balanceRepository.save(any()) } returns
+            Balance(
+                bank = existingBalance.bank,
+                amount = BigInteger.valueOf(100),
+                guildId = existingBalance.guildId,
+                isDeleted = existingBalance.isDeleted
+            )
 
         val result = service.performTransaction(user, "SND", null, guildId, 100, "test")
 
@@ -135,13 +138,13 @@ class TransactionServiceTest {
 
     @Test
     fun `should succeed full transfer from sender to receiver`() = runTest {
-        coEvery { bankRepository.findByGuildAndShortName(guild, "SND") } returns senderBank
-        coEvery { bankRepository.findByGuildAndShortName(guild, "RCV") } returns receiverBank
+        coEvery { bankRepository.findByGuildIdAndShortName(guildId, "SND") } returns senderBank
+        coEvery { bankRepository.findByGuildIdAndShortName(guildId, "RCV") } returns receiverBank
 
         val senderBalance = Balance(
             bank = senderBank,
             amount = BigInteger.valueOf(200),
-            guild = guild,
+            guildId = guildId,
             isDeleted = false
         )
         coEvery { balanceRepository.findByBank(senderBank) } returns senderBalance
@@ -150,14 +153,18 @@ class TransactionServiceTest {
         val receiverFinal = Balance(
             bank = receiverBank,
             amount = BigInteger.valueOf(100),
-            guild = guild,
+            guildId = guildId,
             isDeleted = false
         )
         coEvery { balanceRepository.findByBank(receiverBank) } returns receiverInitial
         coEvery { transactionRepository.save(any()) } returns mockk<Transaction>()
-        coEvery { balanceRepository.save(match { it.bank == senderBank }) } returns senderBalance.copy(
-            amount = BigInteger.valueOf(100)
-        )
+        coEvery { balanceRepository.save(any()) } returns
+                Balance(
+                    bank = senderBalance.bank,
+                    amount = BigInteger.valueOf(100),
+                    guildId = senderBalance.guildId,
+                    isDeleted = senderBalance.isDeleted
+                )
         coEvery { balanceRepository.save(match { it.bank == receiverBank }) } returns receiverFinal
 
         val result = service.performTransaction(user, "SND", "RCV", guildId, 100, "test")
@@ -171,11 +178,11 @@ class TransactionServiceTest {
             Balance(
                 bank = senderBank,
                 amount = BigInteger.ONE,
-                guild = guild,
+                guildId = guildId,
                 isDeleted = false
             )
         )
-        coEvery { balanceRepository.findAllByGuild(guild) } returns balances
+        coEvery { balanceRepository.findAllByGuildId(guildId) } returns balances
 
         val result = service.getBalances(guildId, null)
 
@@ -184,7 +191,7 @@ class TransactionServiceTest {
 
     @Test
     fun `getBalances should return empty set if bank not found`() = runTest {
-        coEvery { bankRepository.findByGuildAndShortName(guild, "XYZ") } returns null
+        coEvery { bankRepository.findByGuildIdAndShortName(guildId, "XYZ") } returns null
 
         val result = service.getBalances(guildId, "XYZ")
 
@@ -193,12 +200,12 @@ class TransactionServiceTest {
 
     @Test
     fun `getBalances should return set with single balance`() = runTest {
-        coEvery { bankRepository.findByGuildAndShortName(guild, "RCV") } returns receiverBank
+        coEvery { bankRepository.findByGuildIdAndShortName(guildId, "RCV") } returns receiverBank
 
         val expectedBalance = Balance(
             bank = receiverBank,
             amount = BigInteger.TEN,
-            guild = guild,
+            guildId = guildId,
             isDeleted = false
         )
         coEvery { balanceRepository.findByBank(receiverBank) } returns expectedBalance

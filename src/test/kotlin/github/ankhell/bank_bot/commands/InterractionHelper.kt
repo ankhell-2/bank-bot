@@ -7,7 +7,6 @@ import dev.kord.core.entity.interaction.ChatInputCommandInteraction
 import dev.kord.core.entity.interaction.InteractionCommand
 import io.mockk.every
 import io.mockk.mockk
-import java.math.BigInteger
 
 fun mockInteraction(
     guildId: Snowflake,
@@ -29,11 +28,11 @@ fun mockInteraction(
 fun mockInteractionWithRole(
     guildId: Snowflake,
     user: User,
-    roleId: ULong,
+    roleId: Snowflake,
     permissionName: String? = null
 ): ChatInputCommandInteraction {
     val role = mockk<Role> {
-        every { id.value } returns roleId
+        every { id } returns roleId
     }
 
     val command = mockk<InteractionCommand> {

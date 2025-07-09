@@ -1,7 +1,7 @@
 package github.ankhell.bank_bot.jpa.repositories
 
+import dev.kord.common.entity.Snowflake
 import github.ankhell.bank_bot.jpa.entities.Bank
-import github.ankhell.bank_bot.jpa.entities.Guild
 import github.ankhell.bank_bot.jpa.entities.Member
 import github.ankhell.bank_bot.jpa.entities.Transaction
 import jakarta.persistence.EntityManager
@@ -14,14 +14,14 @@ class TransactionRepositoryCustomImpl(
     private val entityManager: EntityManager
 ) : TransactionRepositoryCustom {
 
-    override fun findFiltered(limit: Long, member: Member?, bank: Bank?, guild: Guild): List< Transaction> {
+    override fun findFiltered(limit: Long, member: Member?, bank: Bank?, guildId: Snowflake): List< Transaction> {
         val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(Transaction::class.java)
         val root = query.from(Transaction::class.java)
 
         val predicates = mutableListOf<Predicate>()
 
-        predicates += cb.equal(root.get<Guild>("guild"), guild)
+        predicates += cb.equal(root.get<Snowflake>("guildId"), guildId)
 
         if (member != null) {
             predicates += cb.equal(root.get<Member>("performedBy"), member)

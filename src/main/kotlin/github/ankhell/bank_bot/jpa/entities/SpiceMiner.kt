@@ -5,29 +5,24 @@ import github.ankhell.bank_bot.jpa.types.SnowflakeJavaType
 import jakarta.persistence.*
 import org.hibernate.annotations.JavaType
 import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.annotations.SQLRestriction
 import org.hibernate.type.SqlTypes
-import java.math.BigInteger
 import java.util.*
 
 @Entity
-@Table(name = "balances")
-@SQLRestriction("is_deleted = false")
-class Balance(
+@Table(
+    name = "spice_miners",
+    uniqueConstraints = [
+        UniqueConstraint(columnNames = ["guild_id", "name"])
+    ]
+)
+class SpiceMiner(
     @Id
-    var bankId: UUID? = null,
-
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "bank_id")
-    var bank: Bank = Bank(),
-
+    @GeneratedValue(strategy = GenerationType.UUID)
+    var uuid: UUID? = null,
     @Column(nullable = false)
-    var amount: BigInteger,
-
-    @Column(name = "is_deleted", nullable = false)
-    var isDeleted: Boolean = false,
-
+    var name: String = "",
+    @Column(nullable = false)
+    var debt: Long = 0,
     @Column(name = "guild_id", nullable = false)
     @JdbcTypeCode(SqlTypes.BIGINT)
     @JavaType(value = SnowflakeJavaType::class)

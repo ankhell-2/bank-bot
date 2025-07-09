@@ -2,20 +2,13 @@ package github.ankhell.bank_bot.commands.bank
 
 import dev.kord.core.entity.interaction.ChatInputCommandInteraction
 import dev.kord.rest.builder.interaction.ChatInputCreateBuilder
-import dev.kord.rest.builder.interaction.UserCommandCreateBuilder
 import dev.kord.rest.builder.interaction.string
 import github.ankhell.bank_bot.Permission
 import github.ankhell.bank_bot.commands.Command
-import github.ankhell.bank_bot.jpa.entities.Bank
-import github.ankhell.bank_bot.jpa.entities.Member
-import github.ankhell.bank_bot.jpa.repositories.BankRepository
 import github.ankhell.bank_bot.service.AuthorizationService
 import github.ankhell.bank_bot.service.BanksService
-import github.ankhell.bank_bot.service.GuildAndMemberRegistrarService
-import kotlinx.coroutines.yield
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
-import java.util.UUID
+import java.util.*
 
 @Component
 class ModifyBank(

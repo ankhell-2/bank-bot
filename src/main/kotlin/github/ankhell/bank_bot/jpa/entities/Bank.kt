@@ -1,17 +1,13 @@
 package github.ankhell.bank_bot.jpa.entities
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.Table
-import jakarta.persistence.UniqueConstraint
+import dev.kord.common.entity.Snowflake
+import github.ankhell.bank_bot.jpa.types.SnowflakeJavaType
+import jakarta.persistence.*
+import org.hibernate.annotations.JavaType
+import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.SQLRestriction
-import org.hibernate.annotations.Where
-import java.util.UUID
+import org.hibernate.type.SqlTypes
+import java.util.*
 
 @Entity
 @Table(
@@ -21,22 +17,24 @@ import java.util.UUID
     ]
 )
 @SQLRestriction("is_deleted = false")
-data class Bank(
+class Bank(
 
     @Id
     @GeneratedValue
-    val uuid: UUID? = null,
+    var uuid: UUID? = null,
 
     @Column(name = "short_name", nullable = false)
-    val shortName: String, // e.g. "HSBC"
+    var shortName: String = "", // e.g. "HSBC"
 
-    @Column(nullable = false)
-    val fullName: String,
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "guild_id")
-    val guild: Guild,
+    @Column(name = "full_name", nullable = false)
+    var fullName: String = "",
 
     @Column(name = "is_deleted", nullable = false)
-    val isDeleted: Boolean = false
+    var isDeleted: Boolean = false,
+
+    @Column(name = "guild_id", nullable = false)
+    @JdbcTypeCode(SqlTypes.BIGINT)
+    @JavaType(value = SnowflakeJavaType::class)
+    var guildId: Snowflake = Snowflake(0uL)
+
 )
