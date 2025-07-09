@@ -16,7 +16,7 @@ class ListPermissionsCommand(
     private val permissionRepository: RolePermissionRepository,
 ) : Command {
 
-    override val command: String = "listpermission"
+    override val command: String = "list_permissions"
 
     override val description: String = "List permissions of a role"
 

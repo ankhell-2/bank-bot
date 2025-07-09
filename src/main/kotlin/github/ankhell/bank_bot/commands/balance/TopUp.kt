@@ -16,7 +16,7 @@ class TopUp(
     private val transactionService: TransactionService
 ) : Command {
 
-    override val command: String = "topup"
+    override val command: String = "top_up"
 
     override val description: String = "Top up bank balance"
 

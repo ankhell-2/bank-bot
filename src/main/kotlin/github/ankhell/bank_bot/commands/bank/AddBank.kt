@@ -15,7 +15,7 @@ class AddBank(
     private val banksService: BanksService
 ) : Command {
 
-    override val command: String = "bankadd"
+    override val command: String = "bank_add"
     override val description: String = "Add a bank"
     override val paramBuilder: ChatInputCreateBuilder.() -> Unit = {
         string("abbreviation", "Abbreviation of a bank name") {

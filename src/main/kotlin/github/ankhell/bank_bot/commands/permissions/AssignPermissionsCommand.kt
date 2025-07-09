@@ -18,7 +18,7 @@ class AssignPermissionsCommand(
     private val permissionRepository: RolePermissionRepository
 ) : Command {
 
-    override val command: String = "assignpermission"
+    override val command: String = "assign_permission"
 
     override val description: String = "Assign permission to a role"
 

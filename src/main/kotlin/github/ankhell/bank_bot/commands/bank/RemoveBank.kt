@@ -15,7 +15,7 @@ class RemoveBank(
     private val banksService: BanksService
 ) : Command {
 
-    override val command: String = "bankremove"
+    override val command: String = "bank_remove"
     override val description: String = "Remove a bank"
     override val paramBuilder: ChatInputCreateBuilder.() -> Unit = {
         string("abbreviation", "Abbreviation of a bank name") {

@@ -16,7 +16,7 @@ class ModifyBank(
     private val banksService: BanksService
 ) : Command {
 
-    override val command: String = "bankmodify"
+    override val command: String = "bank_modify"
     override val description: String = "Modify bank"
     override val paramBuilder: ChatInputCreateBuilder.() -> Unit = {
         string("uuid", "Bank UUID") {

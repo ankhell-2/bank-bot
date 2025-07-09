@@ -16,7 +16,7 @@ class ListBanks(
     private val banksService: BanksService
 ) : Command {
 
-    override val command: String = "listbanks"
+    override val command: String = "bank_list"
 
     override val description: String = "List all banks"
 
