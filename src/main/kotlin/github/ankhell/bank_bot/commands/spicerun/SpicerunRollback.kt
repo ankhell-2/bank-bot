@@ -28,7 +28,7 @@ class SpicerunRollback(
 
     override suspend fun process(interaction: ChatInputCommandInteraction): String {
         val guildId = interaction.invokedCommandGuildId!!
-        return authorizationService.ifAllowed(interaction.user, guildId, Permission.SPICE_RUN_PAY) {
+        return authorizationService.ifAllowed(interaction.user, guildId, Permission.SPICE_RUN_REGISTER) {
             spiceRunService.rollbackRun(
                 guildId = guildId,
                 id = interaction.command.numbers["id"]?.toLong()

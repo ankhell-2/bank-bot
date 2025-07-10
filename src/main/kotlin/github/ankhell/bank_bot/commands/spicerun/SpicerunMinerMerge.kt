@@ -10,32 +10,33 @@ import github.ankhell.bank_bot.service.AuthorizationService
 import github.ankhell.bank_bot.service.SpiceRunService
 import org.springframework.stereotype.Component
 
+
 @Component
-class SpicerunRegister(
+class SpicerunMinerMerge(
     private val authorizationService: AuthorizationService,
     private val spiceRunService: SpiceRunService
 ) : Command {
 
-    override val command: String = "spicerun_register"
+    override val command: String = "spicerun_miner_merge"
 
-    override val description: String = "Register information about spice run participants"
+    override val description: String = "Merge miners"
 
     override val paramBuilder: ChatInputCreateBuilder.() -> Unit = {
-        string("names", "Coma separated array of names (case insensitive)") {
+        string("name","Name of a main miner"){
             required = true
         }
-        number("amount", "Amount of spice gathered, default is 50000") {
-            required = false
+        string("name_slave","Name of a miner to merge into main"){
+            required = true
         }
     }
 
     override suspend fun process(interaction: ChatInputCommandInteraction): String {
         val guildId = interaction.invokedCommandGuildId!!
-        return authorizationService.ifAllowed(interaction.user, guildId, Permission.SPICE_RUN_PAY) {
-            spiceRunService.registerRun(
-                miners = interaction.command.strings["names"]!!.lowercase().split(",").map { it.trim() }.toSet(),
+        return authorizationService.ifAllowed(interaction.user, guildId, Permission.SPICE_RUN_MINER_MERGE) {
+            spiceRunService.mergeMiners(
                 guildId = guildId,
-                amount = interaction.command.numbers["amount"]?.toLong() ?: 50_000L
+                mainMiner = interaction.command.strings["name"]!!.lowercase(),
+                slaveMiner = interaction.command.strings["name_slave"]!!.lowercase()
             ).description
         }
     }

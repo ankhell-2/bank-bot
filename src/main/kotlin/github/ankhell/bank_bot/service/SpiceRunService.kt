@@ -10,9 +10,12 @@ import github.ankhell.bank_bot.jpa.repositories.SpiceMinerRepository
 import github.ankhell.bank_bot.jpa.repositories.SpiceRunConfigRepository
 import github.ankhell.bank_bot.jpa.repositories.SpiceRunRepository
 import github.ankhell.bank_bot.table.MinersTableRenderer
+import github.ankhell.bank_bot.table.SpiceRunTableRenderer
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.interceptor.TransactionAspectSupport
+import java.util.*
 
 private const val GUILD_MINER_ID = "guild"
 
@@ -29,7 +32,7 @@ class SpiceRunService(
     private val spiceRunConfigRepository: SpiceRunConfigRepository,
     private val banksService: BanksService,
     private val transactionService: TransactionService,
-    private val minersTableRenderer: MinersTableRenderer
+    private val spiceRunTableRenderer: SpiceRunTableRenderer
 ) {
 
     @Transactional
@@ -143,7 +146,7 @@ class SpiceRunService(
     }
 
     @Transactional
-    suspend fun getMiners(guildId: Snowflake): Result {
+    suspend fun getMiners(guildId: Snowflake, minersTableRenderer: MinersTableRenderer): Result {
         val miners = spiceMinerRepository.findAllByGuildId(guildId)
         return Result.success(minersTableRenderer.render(miners))
     }
@@ -158,7 +161,7 @@ class SpiceRunService(
         if (config == null) {
             return Result.failure("Configuration for spice runs not found, please add one using /spicerun_configure")
         }
-        if (miner.debt<amount) {
+        if (miner.debt < amount) {
             return Result.failure("Can't pay more than a current debt")
         }
         if (miner.name == GUILD_MINER_ID) {
@@ -193,5 +196,68 @@ class SpiceRunService(
             }
             return Result.success("Successfully paid $amount to $minerName")
         }
+    }
+
+    @Transactional
+    fun listRuns(limit: Long?, guildId: Snowflake): Result {
+        val runs = spiceRunRepository.findByGuildIdOrderByIdDesc(
+            guildId,
+            PageRequest.of(0, limit?.toInt() ?: 10)
+        )
+        return Result.success(spiceRunTableRenderer.render(runs))
+    }
+
+    @Transactional
+    fun mergeMiners(mainMiner: String, slaveMiner: String, guildId: Snowflake): Result {
+        if (mainMiner.equals(slaveMiner, ignoreCase = true)) {
+            return Result.failure("Cannot merge the same miner.")
+        }
+
+        val main = spiceMinerRepository.findByGuildIdAndName(guildId, mainMiner)
+            ?: return Result.failure("Main miner '$mainMiner' not found.")
+
+        val slave = spiceMinerRepository.findByGuildIdAndName(guildId, slaveMiner)
+            ?: return Result.failure("Slave miner '$slaveMiner' not found.")
+
+        return mergeMiners(main.uuid!!, slave.uuid!!, guildId)
+    }
+
+    @Transactional
+    fun mergeMiners(mainMinerId: UUID, slaveMinerId: UUID, guildId: Snowflake): Result {
+        if (mainMinerId == slaveMinerId) {
+            return Result.failure("Cannot merge the same miner.")
+        }
+
+        val main = spiceMinerRepository.findById(mainMinerId)
+            .orElse(null)
+            ?.takeIf { it.guildId == guildId }
+            ?: return Result.failure("Main miner not found in the specified guild.")
+
+        val slave = spiceMinerRepository.findById(slaveMinerId)
+            .orElse(null)
+            ?.takeIf { it.guildId == guildId }
+            ?: return Result.failure("Slave miner not found in the specified guild.")
+
+        if (main.name == GUILD_MINER_ID || slave.name == GUILD_MINER_ID) {
+            return Result.failure("Forbidden to perform merge on $GUILD_MINER_ID!")
+        }
+
+        // Merge debt
+        main.debt += slave.debt
+
+        // Update spice runs
+        val spiceRuns = spiceRunRepository.findAllByParticipant(slave.uuid!!)
+        for (run in spiceRuns) {
+            if (run.participants.removeIf { it.uuid == slave.uuid }) {
+                run.participants.add(main)
+                spiceRunRepository.save(run)
+            }
+        }
+
+        // Persist changes
+        spiceMinerRepository.save(main)
+        spiceMinerRepository.delete(slave)
+
+        return Result.success("Miner '${slave.name}' was merged into '${main.name}'.")
     }
 }
