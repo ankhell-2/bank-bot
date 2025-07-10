@@ -103,6 +103,46 @@ class SpiceRunService(
     }
 
     @Transactional
+    suspend fun rollbackRun(guildId: Snowflake, id: Long?): Result {
+        val spiceRun = if (id != null) {
+            spiceRunRepository.findByIdAndGuildId(id, guildId)
+        } else {
+            spiceRunRepository.findTopByGuildIdOrderByIdDesc(guildId)
+        }
+
+        val totalMelange = spiceRun.spiceGathered
+        val config = spiceRun.config
+
+        val melangePiecePrice =
+            (if (config.hasCraftBonus) MELANGE_DISCOUNTED_RATE else MELANGE_NORMAL_RATE) / MELANGE_PER_REF_RUN
+        val melange = totalMelange / melangePiecePrice
+
+        val melangeGuildShare = (melange * (config.guildShare / 100)).toLong()
+        val melangeForMiners = melange - melangeGuildShare
+        val minerPay = melangeForMiners / spiceRun.participants.size
+
+        // Rollback guild miner
+        val guildMiner = spiceMinerRepository.findByGuildIdAndName(guildId, GUILD_MINER_ID)
+        if (guildMiner != null) {
+            guildMiner.debt -= melangeGuildShare
+            spiceMinerRepository.save(guildMiner)
+        }
+
+        // Rollback individual miners
+        for (miner in spiceRun.participants) {
+            val existingMiner = spiceMinerRepository.findByGuildIdAndName(guildId, miner.name)
+            if (existingMiner != null) {
+                existingMiner.debt -= minerPay
+                spiceMinerRepository.save(existingMiner)
+            }
+        }
+
+        spiceRunRepository.delete(spiceRun)
+
+        return Result.success("Spice run has been rolled back.")
+    }
+
+    @Transactional
     suspend fun getMiners(guildId: Snowflake): Result {
         val miners = spiceMinerRepository.findAllByGuildId(guildId)
         return Result.success(minersTableRenderer.render(miners))
